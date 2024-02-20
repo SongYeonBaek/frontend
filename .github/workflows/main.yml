@@ -1,30 +1,60 @@
+#name: frontend devops
+#
+#on:
+#  push:
+#    branches: [ main ]
+#
+#jobs:
+#  deploy:
+#    name: frontend test
+#    runs-on: ubuntu-latest
+#
+#    steps:
+#    - name: get code from github
+#      uses: appleboy/ssh-action@v1.0.3
+#      with:
+#        host: ${{ secrets.REMOTE_HOST }}
+#        username: ${{ secrets.REMOTE_USER }}
+#        key: ${{ secrets.SSH_KEY }}
+#        port: ${{ secrets.REMOTE_PORT }}
+#        script: |
+#          sudo rm -rf frontend
+#          sudo git clone https://github.com/ddarahakit2023/frontend
+#          cd frontend
+#          sudo npm i
+#          sudo npm run build
+#          sudo docker build --tag ddarahakit2023/frontend:latest .
+#          sudo docker login -u ddarahakit2023 -p Dkagh1234!
+#          sudo docker push ddarahakit2023/frontend:latest
+#          docker-compose -f /home/ubuntu/web.yml pull
+#          docker-compose -f /home/ubuntu/web.yml up --force-recreate
+
 name: frontend devops
 
 on:
   push:
     branches: [ main ]
-    
+
+permissions: write-all
+
 jobs:
   deploy:
     name: frontend test
     runs-on: ubuntu-latest
 
     steps:
-    - name: get code from github
-      uses: appleboy/ssh-action@v1.0.3
-      with:
-        host: ${{ secrets.REMOTE_HOST }}
-        username: ${{ secrets.REMOTE_USER }}
-        key: ${{ secrets.SSH_KEY }}
-        port: ${{ secrets.REMOTE_PORT }}
-        script: |
-          sudo rm -rf frontend
-          sudo git clone https://github.com/ddarahakit2023/frontend
-          cd frontend
-          sudo npm i
-          sudo npm run build
-          sudo docker build --tag ddarahakit2023/frontend:latest .
-          sudo docker login -u ddarahakit2023 -p Dkagh1234!
-          sudo docker push ddarahakit2023/frontend:latest
-          docker-compose -f /home/ubuntu/web.yml pull
-          docker-compose -f /home/ubuntu/web.yml up --force-recreate
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Use Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '20.x'
+      - run: npm i
+      - run: npm run build
+      - run: npm test
+
+      - name: result
+        uses: EnricoMi/publish-unit-test-result-action@v1
+        with:
+          files: 'test-results/*.xml'
